@@ -14,6 +14,14 @@ export default function InvestorDashboard() {
   const [withdrawalAmount, setWithdrawalAmount] = useState("")
   const [requests, setRequests] = useState<any[]>([])
 
+  // Interest rate table
+  const planInterestMap: any = {
+    "3": 5,
+    "6": 7,
+    "12": 9,
+    "24": 12,
+  }
+
   useEffect(() => {
     const investorData = localStorage.getItem("investor")
     if (!investorData) {
@@ -23,10 +31,39 @@ export default function InvestorDashboard() {
     setInvestor(JSON.parse(investorData))
   }, [router])
 
-  const handleWithdrawalRequest = () => {
-    if (!withdrawalAmount || Number.parseFloat(withdrawalAmount) <= 0) {
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (!token) {
+      router.push("/auth/login")
       return
     }
+
+    const fetchInvestor = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/investor/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!res.ok) {
+          router.push("/auth/login")
+          return
+        }
+
+        const data = await res.json()
+        setInvestor(data)
+      } catch (err) {
+        console.error("Fetch investor error:", err)
+        router.push("/auth/login")
+      }
+    }
+
+    fetchInvestor()
+  }, [router])
+
+  const handleWithdrawalRequest = () => {
+    if (!withdrawalAmount || Number.parseFloat(withdrawalAmount) <= 0) return
 
     const newRequest = {
       id: Date.now(),
@@ -41,6 +78,12 @@ export default function InvestorDashboard() {
 
   if (!investor) return null
 
+  const investedAmount = Number(investor.amount)
+  const annualInterest = planInterestMap?.[investor.plan] || 0
+  const monthlyInterestRate = annualInterest / 12
+  const interestEarnedYearly = (investedAmount * annualInterest) / 100
+  const totalValue = investedAmount + interestEarnedYearly
+
   return (
     <div className="flex min-h-screen bg-background">
       <InvestorSidebar />
@@ -48,7 +91,9 @@ export default function InvestorDashboard() {
       <main className="flex-1 overflow-auto">
         <div className="p-6 md:p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back, {investor.name}</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Welcome back, {investor.fullName}
+            </h1>
             <p className="text-muted-foreground">Manage your investments and track your returns</p>
           </div>
 
@@ -58,7 +103,9 @@ export default function InvestorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Invested Amount</p>
-                  <p className="text-2xl font-bold text-foreground">$50,000</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    LKR {investedAmount.toLocaleString()}
+                  </p>
                 </div>
                 <Wallet className="w-8 h-8 text-primary opacity-50" />
               </div>
@@ -68,7 +115,7 @@ export default function InvestorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Monthly Interest Rate</p>
-                  <p className="text-2xl font-bold text-foreground">2.5%</p>
+                  <p className="text-2xl font-bold text-foreground">{monthlyInterestRate.toFixed(2)}%</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-primary opacity-50" />
               </div>
@@ -77,8 +124,10 @@ export default function InvestorDashboard() {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Interest Earned</p>
-                  <p className="text-2xl font-bold text-foreground">$5,000</p>
+                  <p className="text-sm text-muted-foreground mb-1">Interest Earned (Annual)</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    LKR {interestEarnedYearly.toLocaleString()}
+                  </p>
                 </div>
                 <DollarSign className="w-8 h-8 text-primary opacity-50" />
               </div>
@@ -87,8 +136,10 @@ export default function InvestorDashboard() {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Total Value</p>
-                  <p className="text-2xl font-bold text-foreground">$55,000</p>
+                  <p className="text-sm text-muted-foreground mb-1">Total Value After 1 Year</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    LKR {totalValue.toLocaleString()}
+                  </p>
                 </div>
                 <Wallet className="w-8 h-8 text-primary opacity-50" />
               </div>
@@ -100,22 +151,19 @@ export default function InvestorDashboard() {
             <Card className="p-6">
               <h2 className="text-lg font-semibold text-foreground mb-4">Profile Information</h2>
               <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Full Name</p>
-                  <p className="text-foreground font-medium">{investor.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Email Address</p>
-                  <p className="text-foreground font-medium">{investor.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Phone Number</p>
-                  <p className="text-foreground font-medium">+1 (555) 123-4567</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Member Since</p>
-                  <p className="text-foreground font-medium">January 2024</p>
-                </div>
+                <p><strong>Full Name:</strong> {investor.fullName}</p>
+                <p><strong>NIC:</strong> {investor.nic}</p>
+                <p><strong>Address:</strong> {investor.address}</p>
+                <p><strong>District:</strong> {investor.district}</p>
+                <p><strong>Province:</strong> {investor.province}</p>
+                <p><strong>Postal Code:</strong> {investor.postalCode}</p>
+                <p><strong>Phone:</strong> {investor.phone}</p>
+                <p><strong>Email:</strong> {investor.email}</p>
+                <p><strong>Investment Plan:</strong> {investor.plan} Months</p>
+                <p><strong>Invested Amount:</strong> LKR {investedAmount.toLocaleString()}</p>
+                <p><strong>Bank Name:</strong> {investor.bankName}</p>
+                <p><strong>Account No:</strong> {investor.accountNo}</p>
+                <p><strong>Branch Name:</strong> {investor.branchName}</p>
               </div>
             </Card>
 
@@ -124,7 +172,7 @@ export default function InvestorDashboard() {
               <h2 className="text-lg font-semibold text-foreground mb-4">Request Withdrawal</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground block mb-2">Amount (USD)</label>
+                  <label className="text-sm font-medium text-foreground block mb-2">Amount (LKR)</label>
                   <Input
                     type="number"
                     placeholder="Enter amount"
@@ -140,9 +188,6 @@ export default function InvestorDashboard() {
                   <Send className="w-4 h-4" />
                   Send Request
                 </Button>
-                <p className="text-xs text-muted-foreground">
-                  Requests are typically processed within 2-3 business days.
-                </p>
               </div>
             </Card>
           </div>
@@ -164,7 +209,9 @@ export default function InvestorDashboard() {
                     {requests.map((req) => (
                       <tr key={req.id} className="border-b border-border">
                         <td className="py-3 px-2 text-foreground">{req.date}</td>
-                        <td className="py-3 px-2 text-foreground font-medium">${req.amount.toFixed(2)}</td>
+                        <td className="py-3 px-2 text-foreground font-medium">
+                          LKR {req.amount.toLocaleString()}
+                        </td>
                         <td className="py-3 px-2">
                           <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-700 dark:text-yellow-400">
                             {req.status}

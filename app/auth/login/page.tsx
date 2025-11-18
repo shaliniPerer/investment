@@ -1,33 +1,53 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react"
+import type React from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     if (!email || !password) {
-      setError("Please fill in all fields")
-      return
+      setError("Please fill in all fields");
+      return;
     }
 
-    // Simulate login - in a real app, this would call an API
-    localStorage.setItem("investor", JSON.stringify({ email, name: "John Investor" }))
-    router.push("/investor/dashboard")
-  }
+    try {
+      // 🔥 Now calling NEXT.js backend, not external backend
+      const res = await fetch("/api/investor/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Login failed");
+        return;
+      }
+
+      // Save token
+      localStorage.setItem("token", data.token);
+
+      // Redirect
+      router.push("/investor/dashboard");
+    } catch (err) {
+      setError("Something went wrong. Try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-white to-primary/5 flex items-center justify-center px-4 py-12 relative overflow-hidden">
@@ -93,12 +113,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <Link href="#" className="text-primary hover:text-primary/80 font-medium transition">
-                Forgot password?
-              </Link>
-            </div>
-
             <Button
               type="submit"
               className="w-full h-11 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white font-semibold shadow-md hover:shadow-lg transition-all rounded-xl"
@@ -133,5 +147,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
