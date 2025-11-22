@@ -10,12 +10,12 @@ import { Check, X, Users } from "lucide-react"
 export default function AdminDashboard() {
   const router = useRouter()
   const [admin, setAdmin] = useState<any>(null)
-  const [withdrawalRequests, setWithdrawalRequests] = useState([
-    { id: 1, investorName: "John Doe", amount: 5000, status: "pending", email: "john@example.com" },
-    { id: 2, investorName: "Jane Smith", amount: 10000, status: "pending", email: "jane@example.com" },
-    { id: 3, investorName: "Bob Johnson", amount: 7500, status: "pending", email: "bob@example.com" },
-  ])
+  const [investors, setInvestors] = useState<any[]>([])
+  const [withdrawalRequests, setWithdrawalRequests] = useState<any[]>([])
 
+  // -----------------------------
+  // CHECK ADMIN LOGIN
+  // -----------------------------
   useEffect(() => {
     const adminData = localStorage.getItem("admin")
     if (!adminData) {
@@ -25,48 +25,61 @@ export default function AdminDashboard() {
     setAdmin(JSON.parse(adminData))
   }, [router])
 
-  const handleApprove = (id: number) => {
-    setWithdrawalRequests((prev) => prev.map((req) => (req.id === id ? { ...req, status: "approved" } : req)))
+  // -----------------------------
+  // FETCH INVESTORS FROM DATABASE
+  // -----------------------------
+  async function loadInvestors() {
+    try {
+      const res = await fetch("/api/admin/investors")
+      const data = await res.json()
+      setInvestors(data)
+    } catch (error) {
+      console.log("Investor fetch error:", error)
+    }
   }
 
-  const handleReject = (id: number) => {
-    setWithdrawalRequests((prev) => prev.map((req) => (req.id === id ? { ...req, status: "rejected" } : req)))
+  // -----------------------------
+  // FETCH WITHDRAW REQUESTS
+  // -----------------------------
+  async function loadWithdrawals() {
+    try {
+      const res = await fetch("/api/admin/withdrawals")
+      const data = await res.json()
+      setWithdrawalRequests(data)
+    } catch (error) {
+      console.log("Withdrawal fetch error:", error)
+    }
+  }
+
+  // -----------------------------
+  // LOAD BOTH TABLES AND POLLING
+  // -----------------------------
+  useEffect(() => {
+    loadInvestors()
+    loadWithdrawals()
+
+    // Polling withdrawal requests every 5 seconds
+    const interval = setInterval(() => {
+      loadWithdrawals()
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // -----------------------------
+  // APPROVE/REJECT WITHDRAWAL
+  // -----------------------------
+  const handleApprove = async (id: string) => {
+    await fetch(`/api/admin/withdrawals/${id}/approve`, { method: "POST" })
+    loadWithdrawals()
+  }
+
+  const handleReject = async (id: string) => {
+    await fetch(`/api/admin/withdrawals/${id}/reject`, { method: "POST" })
+    loadWithdrawals()
   }
 
   if (!admin) return null
-
-  const investors = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@example.com",
-      phone: "+1 (555) 111-1111",
-      bankAccount: "****1234",
-      invested: "$50,000",
-      rate: "2.5%",
-      earned: "$5,000",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane@example.com",
-      phone: "+1 (555) 222-2222",
-      bankAccount: "****5678",
-      invested: "$75,000",
-      rate: "2.5%",
-      earned: "$7,500",
-    },
-    {
-      id: 3,
-      name: "Bob Johnson",
-      email: "bob@example.com",
-      phone: "+1 (555) 333-3333",
-      bankAccount: "****9012",
-      invested: "$100,000",
-      rate: "2.5%",
-      earned: "$10,000",
-    },
-  ]
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -75,122 +88,129 @@ export default function AdminDashboard() {
       <main className="flex-1 overflow-auto">
         <div className="p-6 md:p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage investors and process withdrawal requests</p>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage investors and withdrawal requests</p>
           </div>
 
-          {/* Admin Profile Card */}
+          {/* Admin Profile */}
           <Card className="p-6 mb-8">
-            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
               Admin Profile
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm text-muted-foreground">Admin Name</p>
-                <p className="text-foreground font-medium">{admin.name}</p>
+                <p className="font-medium">{admin.name}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Email Address</p>
-                <p className="text-foreground font-medium">{admin.email}</p>
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="font-medium">{admin.email}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Contact Number</p>
-                <p className="text-foreground font-medium">+1 (555) 999-9999</p>
+                <p className="text-sm text-muted-foreground">Contact</p>
+                <p className="font-medium">+94 71 234 5678</p>
               </div>
             </div>
           </Card>
 
           {/* Investors Table */}
           <Card className="p-6 mb-8">
-            <h2 className="text-lg font-semibold text-foreground mb-4">All Investors</h2>
+            <h2 className="text-lg font-semibold mb-4">All Investors</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Name</th>
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Email</th>
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Phone</th>
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Bank Account</th>
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Invested</th>
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Rate</th>
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Interest</th>
+                  <tr className="border-b">
+                     <th className="py-3 px-2">Full Name</th>
+                     <th className="py-3 px-2">NIC</th>
+                     <th className="py-3 px-2">Address</th>
+                     <th className="py-3 px-2">District</th>
+                     <th className="py-3 px-2">Province</th>
+                     <th className="py-3 px-2">Postal Code</th>
+                     <th className="py-3 px-2">Phone</th>
+                     <th className="py-3 px-2">Email</th>
+                     <th className="py-3 px-2">Plan</th>
+                     <th className="py-3 px-2">Amount</th>
+                     <th className="py-3 px-2">Bank Name</th>
+                     <th className="py-3 px-2">Account No</th>
+                     <th className="py-3 px-2">Branch</th>
+                     <th className="py-3 px-2">NIC File</th>
+                     <th className="py-3 px-2">Bank Book</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {investors.map((investor) => (
-                    <tr key={investor.id} className="border-b border-border hover:bg-secondary/50 transition">
-                      <td className="py-3 px-2 text-foreground">{investor.name}</td>
-                      <td className="py-3 px-2 text-foreground">{investor.email}</td>
-                      <td className="py-3 px-2 text-foreground">{investor.phone}</td>
-                      <td className="py-3 px-2 text-foreground">{investor.bankAccount}</td>
-                      <td className="py-3 px-2 text-foreground font-medium">{investor.invested}</td>
-                      <td className="py-3 px-2 text-foreground">{investor.rate}</td>
-                      <td className="py-3 px-2 text-foreground font-medium text-primary">{investor.earned}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+                   {investors.map((inv: any) => (
+          <tr key={inv._id} className="border-b border-border hover:bg-secondary/50 transition">
+            <td className="py-3 px-2">{inv.fullName}</td>
+            <td className="py-3 px-2">{inv.nic}</td>
+            <td className="py-3 px-2">{inv.address}</td>
+            <td className="py-3 px-2">{inv.district}</td>
+            <td className="py-3 px-2">{inv.province}</td>
+            <td className="py-3 px-2">{inv.postalCode}</td>
+            <td className="py-3 px-2">{inv.phone}</td>
+            <td className="py-3 px-2">{inv.email}</td>
+            <td className="py-3 px-2">{inv.plan} months</td>
+            <td className="py-3 px-2">{inv.amount}</td>
+            <td className="py-3 px-2">{inv.bankName}</td>
+            <td className="py-3 px-2">{inv.accountNo}</td>
+            <td className="py-3 px-2">{inv.branchName}</td>
+            <td className="py-3 px-2">
+              <a href={inv.nicFile} target="_blank" className="text-primary underline">View</a>
+            </td>
+            <td className="py-3 px-2">
+              <a href={inv.bankBookFile} target="_blank" className="text-primary underline">View</a>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</Card>
 
           {/* Withdrawal Requests */}
           <Card className="p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Withdrawal Requests</h2>
+            <h2 className="text-lg font-semibold mb-4">Withdrawal Requests</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Investor Name</th>
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Email</th>
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Amount</th>
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Status</th>
-                    <th className="text-left py-3 px-2 text-muted-foreground font-medium">Actions</th>
+                  <tr className="border-b">
+                    <th className="py-3 px-2">Investor</th>
+                    <th className="py-3 px-2">Email</th>
+                    <th className="py-3 px-2">Amount</th>
+                    <th className="py-3 px-2">Status</th>
+                    <th className="py-3 px-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {withdrawalRequests.map((request) => (
-                    <tr key={request.id} className="border-b border-border hover:bg-secondary/50 transition">
-                      <td className="py-3 px-2 text-foreground">{request.investorName}</td>
-                      <td className="py-3 px-2 text-foreground">{request.email}</td>
-                      <td className="py-3 px-2 text-foreground font-medium">${request.amount.toLocaleString()}</td>
+                  {withdrawalRequests.map((req) => (
+                    <tr key={req._id} className="border-b hover:bg-secondary/50">
+                      <td className="py-3 px-2">{req.investorName}</td>
+                      <td className="py-3 px-2">{req.email}</td>
+                      <td className="py-3 px-2 font-medium">LKR {req.amount}</td>
                       <td className="py-3 px-2">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            request.status === "pending"
-                              ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400"
-                              : request.status === "approved"
-                                ? "bg-green-500/20 text-green-700 dark:text-green-400"
-                                : "bg-red-500/20 text-red-700 dark:text-red-400"
-                          }`}
-                        >
-                          {request.status}
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium
+                          ${req.status === "pending"
+                            ? "bg-yellow-500/20 text-yellow-700"
+                            : req.status === "approved"
+                              ? "bg-green-500/20 text-green-700"
+                              : "bg-red-500/20 text-red-700"
+                          }
+                        `}>
+                          {req.status}
                         </span>
                       </td>
-                      <td className="py-3 px-2">
-                        {request.status === "pending" ? (
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleApprove(request.id)}
-                              className="gap-1"
-                            >
-                              <Check className="w-4 h-4" />
-                              Approve
+                      <td className="py-3 px-2 flex gap-2">
+                        {req.status === "pending" ? (
+                          <>
+                            <Button size="sm" onClick={() => handleApprove(req._id)}>
+                              <Check className="w-4 h-4" /> Approve
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleReject(request.id)}
-                              className="gap-1 text-destructive hover:text-destructive"
-                            >
-                              <X className="w-4 h-4" />
-                              Reject
+                            <Button size="sm" variant="outline" onClick={() => handleReject(req._id)}>
+                              <X className="w-4 h-4" /> Reject
                             </Button>
-                          </div>
+                          </>
                         ) : (
-                          <span className="text-muted-foreground text-xs">Processed</span>
+                          <span className="text-xs text-muted-foreground">Processed</span>
                         )}
                       </td>
                     </tr>

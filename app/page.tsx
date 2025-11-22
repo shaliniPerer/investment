@@ -367,12 +367,14 @@ export default function HomePage() {
                 Get Started
               </Button>
             </Link>
+            <Link href="/auth/signup">
             <Button
               size="lg"
               className="border-2 border-white text-white hover:bg-white/10 font-semibold px-8 bg-transparent"
             >
               Learn More
             </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -409,7 +411,7 @@ export default function HomePage() {
       </section> */}
 
       {/* Newsletter */}
-      <section className="py-20 px-6 bg-white border-t border-border">
+      {/* <section className="py-20 px-6 bg-white border-t border-border">
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-4">
@@ -430,83 +432,64 @@ export default function HomePage() {
             </form>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer className="border-t border-primary bg-primary text-white py-12 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <p className="text-lg font-bold text-white mb-2">InvestPro</p>
-              <p className="text-white/80 text-sm">Enterprise investment management platform.</p>
-            </div>
-            <div>
-              <p className="font-semibold text-white mb-3">Product</p>
-              <ul className="space-y-2 text-sm text-white/70">
-                <li>
-                  <Link href="#" className="hover:text-white transition">
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition">
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition">
-                    Security
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-white mb-3">Company</p>
-              <ul className="space-y-2 text-sm text-white/70">
-                <li>
-                  <Link href="#" className="hover:text-white transition">
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition">
-                    Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition">
-                    Contact
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-white mb-3">Legal</p>
-              <ul className="space-y-2 text-sm text-white/70">
-                <li>
-                  <Link href="#" className="hover:text-white transition">
-                    Privacy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition">
-                    Terms
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition">
-                    Cookies
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-white/20 pt-8 flex flex-col md:flex-row items-center justify-between">
-            <p className="text-sm text-white/80">© 2025 InvestPro. All rights reserved.</p>
-            <p className="text-sm text-white/80 mt-4 md:mt-0">Secure • Transparent • Professional</p>
-          </div>
-        </div>
-      </footer>
+  <div className="max-w-6xl mx-auto">
+    <div className="grid md:grid-cols-3 gap-8 mb-8">
+
+      {/* Branding */}
+      <div>
+        <p className="text-lg font-bold text-white mb-2">InvestPro</p>
+        <p className="text-white/80 text-sm">
+          Smart and secure investment management platform for investors.
+        </p>
+      </div>
+
+      {/* Quick Links */}
+      <div>
+        <p className="font-semibold text-white mb-3">Quick Links</p>
+        <ul className="space-y-2 text-sm text-white/70">
+          <li>
+            <Link href="/" className="hover:text-white transition">
+              Home
+            </Link>
+          </li>
+          <li>
+            <Link href="/auth/login" className="hover:text-white transition">
+              Login
+            </Link>
+          </li>
+          <li>
+            <Link href="/auth/signup" className="hover:text-white transition">
+              Register
+            </Link>
+          </li>
+          
+        </ul>
+      </div>
+
+      {/* Contact */}
+      <div>
+        <p className="font-semibold text-white mb-3">Contact</p>
+        <ul className="space-y-2 text-sm text-white/70">
+          <li>Email: support@investpro.com</li>
+          <li>Phone: +94 77 123 4567</li>
+          <li>Location: Colombo, Sri Lanka</li>
+        </ul>
+      </div>
+
+    </div>
+
+    {/* Bottom Bar */}
+    <div className="border-t border-white/20 pt-8 flex flex-col md:flex-row items-center justify-between">
+      <p className="text-sm text-white/80">© 2025 InvestPro. All rights reserved.</p>
+      <p className="text-sm text-white/80 mt-4 md:mt-0">Secure • Transparent • Professional</p>
+    </div>
+  </div>
+</footer>
+
     </div>
   )
 }

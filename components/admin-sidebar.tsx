@@ -23,8 +23,8 @@ export default function AdminSidebar() {
     },
     {
       icon: Users,
-      label: "Investors",
-      href: "#",
+      label: "Home",
+      href: "/",
     },
   ]
 

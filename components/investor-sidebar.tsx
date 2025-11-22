@@ -23,8 +23,8 @@ export default function InvestorSidebar() {
     },
     {
       icon: Wallet,
-      label: "Portfolio",
-      href: "#",
+      label: "Home",
+      href: "/",
     },
   ]
 
